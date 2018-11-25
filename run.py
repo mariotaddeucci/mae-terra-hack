@@ -6,36 +6,12 @@ app.config['SECRET_KEY'] = "key"
 app.config['DEBUG'] = True
 
 
-@app.teardown_appcontext
-def cleanup(resp_or_exc):
-    db_session.remove()
-
-
-@app.before_request
-def mock_data_base():
-    db_session.add_all([
-        Produto(clarifai_id='Mãe Terra - Mini Tribos Azeite e Ervas', message='Mãe Terra - Mini Tribos Azeite e Ervas esse é o de ervas e a mensagem criada', tags=[
-            Tag(tag='SNACK'),
-            Tag(tag='Vegetarian Food'),
-            Tag(tag='Breakfast Cereal'),
-            Tag(tag='Cracker'),
-        ]),
-        Produto(clarifai_id='Mãe Terra - Mini Tribos Chilli', message='Ed Jo1221nes', tags=[
-            Tag(tag='SNACK'),
-            Tag(tag='Vegetarian Food'),
-            Tag(tag='Breakfast Cereal'),
-            Tag(tag='Cracker'),
-        ]),
-    ])
-    db_session.commit()
-
-
 @app.route('/find')
 def find():
     from clarifai.rest import ClarifaiApp
     from os import getenv
 
-    url = request.args['q']
+    url = request.args['imageUrl']
 
     app = ClarifaiApp(api_key=getenv('CLARIFAI_KEY'))
 
@@ -46,15 +22,14 @@ def find():
 
     if concept['value'] < 0.4:
         return jsonify({
-            "messages": [
-                {"text": "Daqui a pouco vou uma alternativa para "},
-                {"text": "What are you up to?"}
-            ]
+            "redirect_to_blocks": ["return"]
         })
+
     obj = db_session.query(Produto).filter_by(clarifai_id=concept['name']).first()
     resp = {
-        "messages":
+        "messages": [
             {"text": obj.message}
+        ]
     }
     return jsonify(resp)
 
