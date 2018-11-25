@@ -1,6 +1,7 @@
 from sqlalchemy import *
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship, scoped_session
+from os import getenv
 
 Model = declarative_base()
 
@@ -20,6 +21,6 @@ class Tag(Model):
     produto_id = Column(Integer, ForeignKey(Produto.__tablename__ + '.id'), nullable=False)
 
 
-engine = create_engine('sqlite:///base.db')
+engine = create_engine(getenv('SQLALCHEMY_URI'))
 Model.metadata.create_all(engine)
 db_session = scoped_session(sessionmaker(bind=engine, autocommit=False, autoflush=False))

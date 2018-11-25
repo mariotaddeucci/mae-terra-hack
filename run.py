@@ -1,18 +1,16 @@
 from flask import Flask, jsonify, request
 from database import db_session, Produto, Tag
+from os import getenv
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = "key"
-app.config['DEBUG'] = True
+app.config['SECRET_KEY'] = getenv('SECRET_KEY')
 
 
 @app.route('/find')
 def find():
     from clarifai.rest import ClarifaiApp
-    from os import getenv
 
     url = request.args['imageUrl']
-
     app = ClarifaiApp(api_key=getenv('CLARIFAI_KEY'))
 
     model = app.models.get(model_id='produtos')
@@ -27,9 +25,7 @@ def find():
 
     obj = db_session.query(Produto).filter_by(clarifai_id=concept['name']).first()
     resp = {
-        "messages": [
-            {"text": obj.message}
-        ]
+        "messages": obj.message
     }
     return jsonify(resp)
 
